@@ -1,0 +1,75 @@
+import { Component, OnInit } from '@angular/core';
+import { CustomerService } from './customer.service';
+import { Customer } from './customer';
+
+@Component({
+  selector: 'app-customers-list',
+  template: `
+    <div *ngFor="let customer of customers">
+      <p>{{ customer.name }}</p>
+      <p>{{ customer.companyName }}</p>
+      <p>{{ customer.phone }}</p>
+      <p>{{ customer.email }}</p>
+      <button (click)="edit(customer)">Edit</button>
+    </div>
+  `,
+  providers: [CustomerService]
+})
+export class CustomersListComponent implements OnInit {
+  customers: Customer[];
+
+  constructor(private customerService: CustomerService, private router: Router) { }
+
+  ngOnInit() {
+    this.customerService.getCustomers()
+      .subscribe(customers => this.customers = customers);
+  }
+  edit(customer: Customer) {
+    this.router.navigate(['/edit', customer.id]);
+  }
+}
+import { Component, OnInit } from '@angular/core';
+import { CustomerService } from './customer.service';
+import { Customer } from './customer';
+import { ActivatedRoute } from '@angular/router';
+
+@Component({
+  selector: 'app-customers-edit',
+  template: `
+    <form (ngSubmit)="save()">
+      <label>
+        Name:
+        <input type="text" [(ngModel)]="customer.name" name="name">
+      </label>
+      <label>
+        Company Name:
+        <input type="text" [(ngModel)]="customer.companyName" name="companyName">
+      </label>
+      <label>
+        Phone:
+        <input type="text" [(ngModel)]="customer.phone" name="phone">
+      </label>
+      <label>
+        Email:
+        <input type="text" [(ngModel)]="customer.email" name="email">
+      </label>
+      <button type="submit">Save</button>
+    </form>
+  `,
+  providers: [CustomerService]
+})
+export class CustomersEditComponent implements OnInit {
+  customer: Customer;
+
+  constructor(private customerService: CustomerService, private route: ActivatedRoute) { }
+
+  ngOnInit() {
+    this.route.params.subscribe(params => {
+      this.customerService.getCustomer(params['id'])
+        .subscribe(customer => this.customer = customer);
+    });
+  }
+  save() {
+    this.customerService.saveCustomer(this.customer).subscribe();
+  }
+}
