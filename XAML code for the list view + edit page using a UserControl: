@@ -1,0 +1,92 @@
+// ListViewModel
+public class ListViewModel : INotifyPropertyChanged
+{
+    private readonly ICustomerRepository _customerRepository;
+    private List<Customer> _customers;
+
+    public ListViewModel(ICustomerRepository customerRepository)
+    {
+        _customerRepository = customerRepository;
+        LoadCustomersCommand = new RelayCommand(LoadCustomers);
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public ICommand LoadCustomersCommand { get; set; }
+
+    public List<Customer> Customers
+    {
+        get => _customers;
+        set
+        {
+            _customers = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private async void LoadCustomers()
+    {
+        Customers = await _customerRepository.GetAllCustomers();
+    }
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+}
+
+// ListView
+<DataGrid ItemsSource="{Binding Customers}">
+    <DataGrid.Columns>
+        <DataGridTextColumn Binding="{Binding Name}" Header="Name" />
+        <DataGridTextColumn Binding="{Binding CompanyName}" Header="Company Name" />
+        <DataGridTextColumn Binding="{Binding Phone}" Header="Phone" />
+        <DataGridTextColumn Binding="{Binding Email}" Header="Email" />
+    </DataGrid.Columns>
+</DataGrid>
+
+// EditViewModel
+public class EditViewModel : INotifyPropertyChanged
+{
+    private readonly ICustomerRepository _customerRepository;
+    private Customer _customer;
+
+    public EditViewModel(ICustomerRepository customerRepository)
+    {
+        _customerRepository = customerRepository;
+        SaveCommand = new RelayCommand(Save);
+    }
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    public ICommand SaveCommand { get; set; }
+
+    public Customer Customer
+    {
+        get => _customer;
+        set
+        {
+            _customer = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private async void Save()
+    {
+        await _customerRepository.SaveCustomer(Customer);
+    }
+
+    protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+}
+
+// EditView
+<StackPanel>
+    <TextBox Text="{Binding Customer.Name, UpdateSourceTrigger=PropertyChanged}" />
+    <TextBox Text="{Binding Customer.CompanyName, UpdateSourceTrigger=PropertyChanged}" />
+    <TextBox Text="{Binding Customer.Phone, UpdateSourceTrigger=PropertyChanged}" />
+    <TextBox Text="{Binding Customer.Email, UpdateSourceTrigger=PropertyChanged}" />
+    <Button Command="{Binding SaveCommand}" Content="Save"/>
+</StackPanel>
